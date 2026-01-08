@@ -4,6 +4,7 @@ from app.middlewares.auth import auth_middleware
 from app.api.admin import users, projects
 from app.api.admin import shifts
 from app.api import auth
+from app.api.admin import projects_daily
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -22,6 +23,7 @@ app.add_middleware(
 app.include_router(users.router)
 app.include_router(projects.router)
 app.include_router(auth.router)
+app.include_router(projects_daily.router)
 
 from app.api.time import history
 app.include_router(history.router)
