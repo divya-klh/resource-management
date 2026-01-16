@@ -16,7 +16,10 @@ from app.models.user import User
 # --- IMPORTS FOR PROJECT MEMBERS (WORKERS) ---
 from app.models.project_members import ProjectMember
 from app.schemas.project_members import MemberAssign, MemberResponse
+from pydantic import BaseModel
 
+class MemberRoleUpdate(BaseModel):
+    work_role: str
 router = APIRouter(prefix="/admin/projects", tags=["Admin - Projects"])
 
 def get_db():
@@ -359,3 +362,61 @@ def list_project_members(
         ))
     
     return members_list
+
+# --- REMOVE MEMBER (WORKER) ---
+@router.delete("/{project_id}/members/{user_id}")
+def remove_project_member(
+    project_id: UUID, 
+    user_id: UUID, 
+    db: Session = Depends(get_db)
+):
+    # 1. Find the specific assignment
+    member_record = db.query(ProjectMember).filter(
+        ProjectMember.project_id == project_id,
+        ProjectMember.user_id == user_id
+    ).first()
+
+    if not member_record:
+        raise HTTPException(status_code=404, detail="Member assignment not found")
+
+    # 2. Delete the record
+    db.delete(member_record)
+    db.commit()
+
+    return {"message": "Member removed successfully"}
+
+
+@router.delete("/{project_id}/members/{user_id}")
+def remove_project_member(project_id: UUID, user_id: UUID, db: Session = Depends(get_db)):
+    member = db.query(ProjectMember).filter(
+        ProjectMember.project_id == project_id, 
+        ProjectMember.user_id == user_id
+    ).first()
+    
+    if not member: 
+        raise HTTPException(status_code=404, detail="Member assignment not found")
+    
+    db.delete(member)
+    db.commit()
+    return {"message": "Member removed"}
+
+# 3. ADD THIS TO THE BOTTOM (To update a worker's role)
+@router.put("/{project_id}/members/{user_id}")
+def update_project_member_role(
+    project_id: UUID, 
+    user_id: UUID, 
+    payload: MemberRoleUpdate, 
+    db: Session = Depends(get_db)
+):
+    member = db.query(ProjectMember).filter(
+        ProjectMember.project_id == project_id, 
+        ProjectMember.user_id == user_id
+    ).first()
+    
+    if not member: 
+        raise HTTPException(status_code=404, detail="Member assignment not found")
+    
+    member.work_role = payload.work_role
+    db.commit()
+    db.refresh(member)
+    return member

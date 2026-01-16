@@ -152,7 +152,7 @@ def approve_session(
     if session.project:
         session.project_name = session.project.name
         
-    return 
+    return session
 
 # --- 5. GET CURRENT ACTIVE SESSION (For Home Page Logic) ---
 @router.get("/current", response_model=Optional[TimeHistoryResponse])
